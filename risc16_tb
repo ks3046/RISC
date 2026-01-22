@@ -1,0 +1,86 @@
+timescale 1ns/1ps
+
+module risc16_tb;
+
+    // ===== Testbench Signals =====
+    reg clk;
+    reg reset;
+
+    // Define clock period for easy adjustment
+    localparam CLK_PERIOD = 10; // 10ns = 100MHz
+
+    // ===== Instantiate the Device Under Test (DUT) =====
+    risc16_cpu uut (
+        .clk(clk),
+        .reset(reset)
+    );
+
+    // ===== Clock Generation =====
+    initial begin
+        clk = 0;
+        // 'forever' block creates a continuous clock
+        forever #(CLK_PERIOD / 2) clk = ~clk;
+    end
+
+    // ===== Test Sequence and Verification =====
+    initial begin
+        $display("===== Testbench Starting =====");
+        
+        // 1. Assert Reset
+        reset = 1;
+        // Wait 26ns (2.6 cycles). This de-asserts reset *between* clock edges (at 25ns and 35ns)
+        # (CLK_PERIOD * 2 + (CLK_PERIOD / 2) + 1); 
+
+        // 2. De-assert Reset
+        $display("Time: %0t | De-asserting reset.", $time);
+        reset = 0;
+
+        // 3. Wait for the program to execute
+        // The program needs ~26 cycles. We will wait for 30 cycles.
+        #(CLK_PERIOD * 30);
+
+        // 4. Verification
+        $display("Time: %0t | ----- Verification -----", $time);
+        
+        // Check R1: should be 5
+        if (uut.regfile[1] == 16'h0005)
+            $display("PASS: R1 = 5");
+        else
+            $display("FAIL: R1 = %h (expected 5)", uut.regfile[1]);
+        
+        // Check R2: should be 10 (0xA)
+        if (uut.regfile[2] == 16'h000A)
+            $display("PASS: R2 = 10");
+        else
+            $display("FAIL: R2 = %h (expected 10)", uut.regfile[2]);
+        
+        // Check R3: should be 15 (0xF)
+        if (uut.regfile[3] == 16'h000F)
+            $display("PASS: R3 = 15");
+        else
+            $display("FAIL: R3 = %h (expected 15)", uut.regfile[3]);
+        
+        // Check R4: should be 15 (loaded from memory)
+        if (uut.regfile[4] == 16'h000F)
+            $display("PASS: R4 = 15");
+        else
+            $display("FAIL: R4 = %h (expected 15)", uut.regfile[4]);
+
+        // Check Data Memory: dmem[50] should be 15
+        if (uut.dmem[50] == 16'h000F)
+            $display("PASS: dmem[50] = 15");
+        else
+            $display("FAIL: dmem[50] = %h (expected 15)", uut.dmem[50]);
+        
+        // Check PC: should have branched from PC=5 to PC=8
+        // (PC+1)+imm = (5+1)+2 = 8
+        if (uut.pc == 8)
+            $display("PASS: PC = 8 (branch successful)");
+        else
+            $display("FAIL: PC = %d (expected 8)", uut.pc);
+
+        // 5. End simulation
+        $display("===== Testbench Finished =====");
+        $finish;
+    end
+endmodule
