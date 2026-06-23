@@ -95,7 +95,7 @@ module risc16_cpu (
         mem_read = 0;
         mem_write = 0;
 
-        // Example Program (same encodings you provided)
+        // Example Program 
         imem[0] = {OP_ADDI, 3'b000, 3'b001, 1'b0, 5'b00101}; // ADDI R1, R0, 5
         imem[1] = {OP_ADDI, 3'b000, 3'b010, 1'b0, 5'b01010}; // ADDI R2, R0,10
         imem[2] = {OP_ADD,  3'b001, 3'b010, 3'b011, 3'b000}; // ADD R3, R1, R2
@@ -149,7 +149,7 @@ module risc16_cpu (
 
                 // ----- STAGE 3: EXECUTE / ADDRESS CALCULATION -----
                 EXEC: begin
-                    // Give alu_out a defined default to avoid stale values
+                   
                     alu_out <= 16'b0;
 
                     case (opcode)
@@ -158,7 +158,7 @@ module risc16_cpu (
                         OP_ADDI: alu_out <= op_a + imm_ext_5;
                         OP_ANDI: alu_out <= op_a & imm_ext_5;
 
-                        // For LD/ST we compute address into alu_out (sign-extended imm8)
+                     
                         OP_LD:   alu_out <= imm_ext_8; 
                         OP_ST:   alu_out <= imm_ext_8;
 
@@ -247,4 +247,4 @@ module risc16_cpu (
             endcase
         end
     end
-endmodu
+endmodule
